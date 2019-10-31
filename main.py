@@ -27,12 +27,7 @@ class SplitIt(object):
     """An application to split expenses equally between friends.
     Uses Ford-Fulkerson algorithm (to be exact it's Edmonds-Karp)"""
     def __init__(self):
-        alice = Node(name="Alice", debt=25)
-        bob = Node(name="Bob", debt=5)
-        carol = Node(name="Carol", debt=-10)
-        dan = Node(name="Dan", debt=-20)
-        self.nodes = [alice, bob, carol, dan]
-        # self.nodes = self._get_nodes()
+        self.nodes = self._get_nodes()
         self.source = None
         self.sink = None
         self._make_graph()
