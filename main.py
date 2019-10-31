@@ -14,8 +14,7 @@ class Node(object):
         self.parent = None  # for BFS
         self.visited = False  # for BFS
         self.residual_capacity = residual_capacity  # for BFS
-        # self.flow_log = ""  # This will tell us how much each person owes who
-        self.flow_log = {}
+        self.flow_log = {}  # format: {to: amount}, this will tell us how much each person owes who
 
     def __repr__(self):
         return self.name
@@ -28,18 +27,17 @@ class SplitIt(object):
     """An application to split expenses equally between friends.
     Uses Ford-Fulkerson algorithm (to be exact it's Edmonds-Karp)"""
     def __init__(self):
-        # self.nodes = self.get_nodes()
-        john = Node(name="john", debt=40)
-        kate = Node(name="kate", debt=-10)
-        ann = Node(name="ann", debt=-10)
-        # nadav = Node(name="nadav", debt=30)
-        # matan = Node(name="matan", debt=-20)
-        self.nodes = [john, kate, ann]
+        alice = Node(name="Alice", debt=25)
+        bob = Node(name="Bob", debt=5)
+        carol = Node(name="Carol", debt=-10)
+        dan = Node(name="Dan", debt=-20)
+        self.nodes = [alice, bob, carol, dan]
+        # self.nodes = self._get_nodes()
         self.source = None
         self.sink = None
-        self.make_graph()
+        self._make_graph()
 
-    def make_graph(self):
+    def _make_graph(self):
         """Makes a graph out of the node
         Returns the source and the sink of the graph"""
 
@@ -152,7 +150,7 @@ class SplitIt(object):
                 else:
                     residual_capacity = child.residual_capacity
                 if child.name == sink.name:
-                    return self.extract_path_from_bfs(current_node, source, sink)
+                    return self._extract_path_from_bfs(current_node, source, sink)
                 if not child.visited and residual_capacity > 0:
                     child.visited = True
                     child.parent = current_node
@@ -160,7 +158,7 @@ class SplitIt(object):
 
         return False  # no path found
 
-    def extract_path_from_bfs(self, node, source, sink):
+    def _extract_path_from_bfs(self, node, source, sink):
         """Returns the trace from source to sink
         Goes up the graph until it finds the source"""
 
@@ -172,18 +170,18 @@ class SplitIt(object):
         path.reverse()
         return path
 
-    def edmonds_karp(self):
+    def _edmonds_karp(self):
         """Finds the max-flow of the graph"""
         max_flow = 0
         path = self._BFS(source=self.source, sink=self.sink)
         while path:  # while there is a path in the residual graph between the source and the sink
-            min_residual_capacity = self.find_min_residual_capacity_in_path(path)
+            min_residual_capacity = self._find_min_residual_capacity_in_path(path)
             max_flow += min_residual_capacity
-            self.send_flow_along_path(path, min_residual_capacity)
+            self._send_flow_along_path(path, min_residual_capacity)
             path = self._BFS(source=self.source, sink=self.sink)
         return max_flow  # Currently this value is unused but it is nice to have since this is the core of the algorithm
 
-    def find_min_residual_capacity_in_path(self, path):
+    def _find_min_residual_capacity_in_path(self, path):
         """Finds the minimum residual capacity of a path"""
         residual_capacities = []
         for node in path:
@@ -196,7 +194,7 @@ class SplitIt(object):
 
         return min(residual_capacities)
 
-    def send_flow_along_path(self, path, flow_amount):
+    def _send_flow_along_path(self, path, flow_amount):
         """Sends certain amount of flow along a certain path"""
         for i in range(len(path)):
             node = path[i]
@@ -223,9 +221,9 @@ class SplitIt(object):
 
     def split_it(self):
         """Splits the bill equally between everybody"""
-        return self.edmonds_karp()
+        return self._edmonds_karp()
 
-    def get_user_input(self):
+    def _get_user_input(self):
         user_amount = input("How many people are splitting the bill: ")
         users = []
         for i in range(int(user_amount)):
@@ -239,7 +237,7 @@ class SplitIt(object):
 
         return users, paid_amounts
 
-    def get_nodes_from_user_input(self, users, paid_amounts):
+    def _get_nodes_from_user_input(self, users, paid_amounts):
         """Make nodes (of the graph) out of user input"""
         total_amount_paid = sum(paid_amounts)
         due_per_person = total_amount_paid / len(users)
@@ -252,14 +250,15 @@ class SplitIt(object):
 
         return nodes
 
-    def get_nodes(self):
-        users, paid_amounts = self.get_user_input()
-        nodes = self.get_nodes_from_user_input(users=users, paid_amounts=paid_amounts)
+    def _get_nodes(self):
+        """Gets user input and returns the nodes to self"""
+        users, paid_amounts = self._get_user_input()
+        nodes = self._get_nodes_from_user_input(users=users, paid_amounts=paid_amounts)
         return nodes
 
     def __repr__(self):
         ret_val = "\n'Split It' is always here to help!\n" \
-                  "The Following are the transfers needed to be done in order to settle up:\n"
+                  "The Following are the transactions needed to be done in order to settle up:\n"
         for node in self.nodes:
             for to_node in node.flow_log:
                 # format of flow_log: {to: amount}
@@ -271,22 +270,18 @@ class SplitIt(object):
                 current = "{} gives {:.2f} to {}\n".format(from_name.capitalize(), amount, to_name.capitalize())
                 ret_val += current
 
-
-        # for node in self.nodes:
-        #     if node.flow_log:
-        #         current = "{} gives {:.2f} to {}\n".format(node.name, flow_amount, path[i+1].name)"
-        #         node.flow_log[node] = [flow_amount, path[i + 1]]  # {from: [amount, to]}
-        #         # node.flow_log += "{} gives {:.2f} to {}\n".format(node.name, flow_amount, path[i+1].name)
-        #         ret_val += node.flow_log
-
         return ret_val
 
     def __str__(self):
         return self.__repr__()
 
+    def get_transactions(self):
+        return self.__str__()
+
     def visualize_graph(self):
-        from_list, to_list = self.get_edges_for_visualization()
-        edge_labels = self.get_edge_labels()
+        """Plot the graph to see how the algorithm worked out who paid who"""
+        from_list, to_list = self._get_edges_for_visualization()
+        edge_labels = self._get_edge_labels(from_list=from_list, to_list=to_list)
 
         # Build a dataframe with the edges
         df = pd.DataFrame({'from': [node.name for node in from_list], 'to': [node.name for node in to_list]})
@@ -296,12 +291,13 @@ class SplitIt(object):
 
         # Make the graph
         pos = nx.spring_layout(graph)
-        nx.draw(graph, with_labels=True, node_size=2000, alpha=0.3, arrows=True, pos=pos)
-        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='red')
+        nx.draw(graph, with_labels=True, node_size=2000, node_color="skyblue", arrows=True, pos=pos)
+        nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_color='#7d868f')
+
         plt.axis('off')
         plt.show()
 
-    def get_edges_for_visualization(self, nodes=None):
+    def _get_edges_for_visualization(self, nodes=None):
         """Get the edges for visualization
         Return format:
             from_list - list of Node, start point of edge
@@ -325,12 +321,14 @@ class SplitIt(object):
 
         return from_list, to_list
 
-    def get_edge_labels(self, nodes=None):
-        """Returns a dictionary of labels for the edges"""
+    def _get_edge_labels(self, from_list, to_list, nodes=None, ):
+        """Returns a dictionary of labels for the edges
+        The labels are flow/capacity"""
         if nodes is None:
             nodes = self.nodes
 
-        edge_labels = {}
+        # Initialize the labels to be with no flow and infinite capacity
+        edge_labels = {(from_node.name, to_node.name): "0.00/{}".format(float("inf")) for from_node, to_node in zip(from_list, to_list)}
         for node in nodes:
             for to_node in node.flow_log:
                 # format of flow_log: {to: amount}
@@ -350,11 +348,13 @@ class SplitIt(object):
         return edge_labels
 
 
-
+def main():
+    splitit = SplitIt()
+    splitit.split_it()
+    transactions = splitit.get_transactions()
+    print(transactions)
+    splitit.visualize_graph()
 
 
 if __name__ == '__main__':
-    splitit = SplitIt()
-    splitit.split_it()
-    splitit.visualize_graph()
-    print(splitit)
+    main()
