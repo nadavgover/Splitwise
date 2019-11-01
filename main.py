@@ -69,6 +69,8 @@ class SplitIt(object):
                         node.children = []
                     if node.flow is None:
                         node.flow = 0
+                    if node.residual_capacity is None:
+                        node.residual_capacity = float("inf")
                     node.children.append(other_node)
 
     def _find_source_nodes(self):
@@ -327,14 +329,16 @@ class SplitIt(object):
 
         return from_list, to_list
 
-    def _get_edge_labels(self, from_list, to_list, nodes=None, ):
+    def _get_edge_labels(self, from_list, to_list, nodes=None):
         """Returns a dictionary of labels for the edges
         The labels are flow/capacity"""
         if nodes is None:
             nodes = self.nodes
 
         # Initialize the labels to be with no flow and infinite capacity
-        edge_labels = {(from_node.name, to_node.name): "0.00/{}".format(float("inf")) for from_node, to_node in zip(from_list, to_list)}
+        # edge_labels = {(from_node.name, to_node.name): "0.00/{}".format(float("inf")) for from_node, to_node in zip(from_list, to_list)}
+
+        edge_labels = {}
         for node in nodes:
             for to_node in node.flow_log:
                 # format of flow_log: {to: amount}
