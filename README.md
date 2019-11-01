@@ -41,8 +41,12 @@ But (!), the Ford-Fulkerson algorithm works with one source node and one sink no
 to all the small original sources (people who owe money), and similarly we create one big sink that connects to all other small sinks 
 (people who need to get money back).
 
-And the result is pretty cool
+And the results are pretty cool:
 
 <img src="/graph_example.png" width="100%" alt="graph flow example">
+
+Alice gets 15$ from Dan and 10$ from Carol, Bob gets 5$ from Dan.</br>
+Nice!
+
 
  
