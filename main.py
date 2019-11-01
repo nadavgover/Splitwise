@@ -273,12 +273,12 @@ class SplitIt(object):
     def get_transactions(self):
         return self.__str__()
 
-    def visualize_graph(self):
+    def visualize_graph(self, only_edges_with_flow=True):
         """Plot the graph to see how the algorithm worked out who paid who"""
-        from_list, to_list = self._get_edges_for_visualization()
+        from_list, to_list = self._get_edges_for_visualization(only_edges_with_flow=only_edges_with_flow)
         edge_labels = self._get_edge_labels(from_list=from_list, to_list=to_list)
 
-        # Build a dataframe with the edges
+        # Build a data frame with the edges
         df = pd.DataFrame({'from': [node.name for node in from_list], 'to': [node.name for node in to_list]})
 
         # Build the graph. Note that we use the DiGraph function to create the directed graph
@@ -292,27 +292,38 @@ class SplitIt(object):
         plt.axis('off')
         plt.show()
 
-    def _get_edges_for_visualization(self, nodes=None):
+    def _get_edges_for_visualization(self, nodes=None, only_edges_with_flow=True):
         """Get the edges for visualization
-        Return format:
+        Input:
+            nodes: list of Node of the graph
+            only_edges_with_flow: set to True if you wish take only edges which have flow in them.
+                                  set to False if you wish to take all edges (also edges with 0 flow)
+        output format:
             from_list - list of Node, start point of edge
             to_list - list of Node, end point of edge
-            capacities - list of capacity of edge
-            flows - list of flow of edge
-            when those four lists are zipped together (zip)
-            so it means there is an edge between the two corresponding zipped from and to items with capacity and flow"""
+            when those two lists are zipped together (zip)
+            so it means there is an edge between the two corresponding zipped from and to elements"""
 
         if nodes is None:
             nodes = self.nodes
 
         from_list = []
         to_list = []
-        for node in nodes:
-            if node.name.lower() == "sink":  # there is nothing after the sink
-                continue
-            for child in node.children:
-                from_list.append(node)
-                to_list.append(child)
+        if only_edges_with_flow:
+            for node in nodes:
+                if node.name.lower() == "sink":  # there is nothing after the sink
+                    continue
+                for to_node in node.flow_log:
+                    from_list.append(node)
+                    to_list.append(to_node)
+
+        else:  # if all edges
+            for node in nodes:
+                if node.name.lower() == "sink":  # there is nothing after the sink
+                    continue
+                for child in node.children:
+                    from_list.append(node)
+                    to_list.append(child)
 
         return from_list, to_list
 
@@ -348,7 +359,7 @@ def main():
     splitit.split_it()
     transactions = splitit.get_transactions()
     print(transactions)
-    splitit.visualize_graph()
+    splitit.visualize_graph(only_edges_with_flow=True)
 
 
 if __name__ == '__main__':
